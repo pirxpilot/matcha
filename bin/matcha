@@ -1,2 +1,4 @@
 #!/usr/bin/env node
-require('v8-argv')(__dirname, '_matcha');
+if (require('v8-argv')) return;
+
+require('./_matcha');
