@@ -1,4 +1,11 @@
 
+1.0.0 / 2016-12-15
+==================
+
+ * change package name to @pirxpilot/matcha
+ * upgrade v8-argv to jkroso/v8-argv
+ * fix --version option
+
 0.7.0 / 2016-03-07
 ==================
 
