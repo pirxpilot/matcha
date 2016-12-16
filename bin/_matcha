@@ -2,53 +2,39 @@
 // -*- mode: javascript -*-
 // vi: set ft=javascript :
 
-var electron = require('electron')
+var program = require('commander')
   , matcha = require('..')
   , utils = matcha.utils;
 
 var Interface = require('../lib/matcha/interface');
 
-var program = electron('matcha')
-  .name('Matcha')
+program
   .version(matcha.version)
-  .desc('https://github.com/logicalparadox/matcha')
-  .cwd(process.cwd())
-  .theme('simple', {
-      command: 'absent'
-    , usage: '<options> <files>'
-  });
-
-program
-  .command('absent')
-  .desc('Run a suite of benchmarks.')
-  .option('-h, --help', 'view matcha usage information')
-  .option('-v, --version', 'view matcha version')
-  .option('-R, --reporter [clean]', 'specify the reporter to use')
-  .option('-I, --interface [bdd]', 'specify the interface to expect')
+  .usage('[options] [files]')
+  .description('Run a suite of benchmarks.')
+  .option('-R, --reporter <name>', 'specify the reporter to use', 'clean')
+  .option('-I, --interface <name>', 'specify the interface to expect', 'bdd')
   .option('--interfaces', 'display available interfaces')
-  .option('--reporters', 'display available reporters  ')
-  .action(runSuite);
+  .option('--reporters', 'display available reporters  ');
 
-program
-  .command('default')
-  .action(runSuite);
+program._name = 'matcha';
 
-program.parse();
+program.parse(process.argv);
+
+runSuite(program);
 
 function runSuite (argv) {
 
-  var showInterfaces = argv.mode('interfaces');
+  var showInterfaces = argv.interfaces;
   if (showInterfaces) {
-    program.colorize();
     console.log();
     console.log('    bdd     - suite/bench style');
     console.log('    exports - commonjs style interface');
     process.exit();
   }
 
-  var showReporters = argv.mode('reporters');
+  var showReporters = argv.reporters;
   if (showReporters) {
-    program.colorize();
     console.log();
     console.log('    clean - clean list');
     console.log('    plain - plain text list');
@@ -59,8 +45,8 @@ function runSuite (argv) {
   var path = require('path')
     , fs = require('fs')
     , exists = fs.existsSync || path.existsSync
-    , cwd = argv.cwd
-    , files = argv.commands.slice(0)
+    , cwd = process.cwd()
+    , files = argv.args
     , re = /\.js$/;
 
   if (!files.length) {
@@ -81,23 +67,21 @@ function runSuite (argv) {
     return _p;
   });
 
-  var style = argv.param('I', 'interface') || 'bdd'
+  var style = argv.interface
     , suite = new matcha.Suite()
-    , ui = new Interface(suite, { style: style })
+    , rep = argv.reporter
     , reporter;
 
   // load reporter
   try {
-    var rep = argv.param('R', 'reporter') || 'clean';
-
     var repPath;
 
     try {
-      repPath = require.resolve('../lib/matcha/reporters/' + rep);  
+      repPath = require.resolve('../lib/matcha/reporters/' + rep);
     } catch(e) {
       try {
         if (rep.charAt(0) === '.') {
-          rep = require('path').resolve(process.cwd(), rep);
+          rep = require('path').resolve(cwd, rep);
         }
 
         repPath = require.resolve(rep);
@@ -105,7 +89,6 @@ function runSuite (argv) {
     }
 
     if (!repPath) {
-      console.error(err);
       console.error('reporter "' + rep + '" does not exist');
       process.exit(1); // Exit with an error code
     }
@@ -116,25 +99,24 @@ function runSuite (argv) {
     process.exit(1);
   }
 
+  new Interface(suite, { style: style });
   load(files, function () {
     run(suite, process.exit);
   });
 
   function load (files, cb) {
-    var after = files.length
     files.forEach(function (file) {
       delete require.cache[file];
       suite.emit('pre-require');
       suite.emit('require', require(file));
-      --after || cb();
     });
+    cb();
   }
 
   function run (suite, cb) {
     var runner = new matcha.Runner(suite);
-    reporter(runner, utils)
+    reporter(runner, utils);
     runner.run(cb);
   }
 
-};
-
+}
