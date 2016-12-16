@@ -69,12 +69,11 @@ function runSuite (argv) {
 
   var style = argv.interface
     , suite = new matcha.Suite()
+    , rep = argv.reporter
     , reporter;
 
   // load reporter
   try {
-    var rep = argv.reporter;
-
     var repPath;
 
     try {
@@ -106,13 +105,12 @@ function runSuite (argv) {
   });
 
   function load (files, cb) {
-    var after = files.length;
     files.forEach(function (file) {
       delete require.cache[file];
       suite.emit('pre-require');
       suite.emit('require', require(file));
-      --after || cb();
     });
+    cb();
   }
 
   function run (suite, cb) {
