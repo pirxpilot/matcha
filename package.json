@@ -22,7 +22,7 @@
     "node": ">= 0.8.0"
   },
   "dependencies": {
-    "electron": "0.4.x",
+    "commander": "~2",
     "v8-argv": "jkroso/v8-argv"
   },
   "devDependencies": {},
