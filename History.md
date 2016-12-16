@@ -1,4 +1,10 @@
 
+1.0.1 / 2016-12-15
+==================
+
+ * add lint Makefile target
+ * replace electron with commander
+
 1.0.0 / 2016-12-15
 ==================
 
